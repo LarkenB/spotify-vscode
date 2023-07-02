@@ -1,25 +1,59 @@
 {
   "name": "spotify-vscode",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "rollup -c -w"
+  "publisher": "larkenb",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "vscode": "^1.74.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "svelte": "^4.0.1"
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onWebviewPanel:catCoding"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "webviews": [
+      {
+        "viewId": "catCoding",
+        "resources": [
+          {
+            "path": "dist/webview.js",
+            "resourceType": "workspace"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "catCoding.start",
+        "title": "Start cat coding session",
+        "category": "Cat Coding"
+      },
+      {
+        "command": "catCoding.doRefactor",
+        "title": "Do some refactoring",
+        "category": "Cat Coding"
+      }
+    ]
+  },
+  "scripts": {
+    "build:extension": "rollup -c rollup.config.extension.js --bundleConfigAsCjs",
+    "build:frontend": "rollup -c rollup.config.frontend.js --bundleConfigAsCjs",
+    "build": "npm run build:frontend && npm run build:extension"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.2",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-typescript": "^11.1.2",
     "@tsconfig/svelte": "^5.0.0",
-    "rollup": "^3.25.3",
+    "@types/vscode": "^1.79.1",
+    "rollup": "^3.26.0",
     "rollup-plugin-svelte": "^7.1.6",
+    "svelte": "^4.0.1",
     "svelte-preprocess": "^5.0.4",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6"
