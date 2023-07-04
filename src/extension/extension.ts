@@ -94,6 +94,23 @@ class CatCodingPanel {
         this._panel.title = "TITLE OF SOMETHING";
 		this._panel.webview.html = this._getHtmlForWebview(webview);
 
+		const CLIENT_ID = "7cbd5d9d094d4aa38c18638efab08bce";
+		const REDIRECT_URI = "http://localhost:3000";
+		const SCOPES = [
+		  'user-read-private',
+		  'user-read-email',
+		  'playlist-read-private',
+		  'playlist-modify-public',
+		  'playlist-modify-private',
+		];
+		
+		this._panel.webview.onDidReceiveMessage(message => {
+		  if (message.command === 'openSpotifyAuth') {
+		    const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(SCOPES.join(' '))}`;
+		    vscode.env.openExternal(vscode.Uri.parse(authUrl));
+		  }
+		});
+
 		// Listen for when the panel is disposed
 		// This happens when the user closes the panel or when the panel is closed programmatically
 		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);

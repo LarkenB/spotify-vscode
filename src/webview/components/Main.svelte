@@ -1,17 +1,17 @@
 <script>
-    let message = 'Hello, World!';
+  const vscode = acquireVsCodeApi();
 
-    function handleClick() {
-      message = 'Button clicked!';
-    }
+  function handleClick() {
+    vscode.postMessage({
+      command: 'openSpotifyAuth',
+    });
+  }
 </script>
-  
+
 <style>
-    
+
 </style>
-  
-  <div class="container">
-    <h1>{message}</h1>
-    <button on:click={handleClick}>Click Me</button>
-  </div>
-  
+
+<div class="container">
+  <button on:click={handleClick}>Redirect to Spotify</button>
+</div>
