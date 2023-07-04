@@ -1,10 +1,5 @@
 import * as vscode from 'vscode';
-
-const cats = {
-	'Coding Cat': 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-	'Compiling Cat': 'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
-	'Testing Cat': 'https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif'
-};
+import * as http from 'http';
 
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
@@ -89,13 +84,44 @@ class CatCodingPanel {
 		this._panel = panel;
 		this._extensionUri = extensionUri;
 
+
+
+		// Start the temporary server
+		const server = http.createServer((req, res) => {
+
+
+			console.log(req.url);
+
+			const url = req.url;
+			if (url.startsWith('/spotify/callback')) {
+				  // Extract the authorization code from the URL
+				  const code = url.split('=')[1];
+				
+				  console.log(`CODE: ${code}`);
+	
+				  /// Send the success response
+				//res.writeHead(200, { 'Content-Type': 'text/html' });
+				//res.end('Authentication successful. You can now close this page and return to the VS Code extension.');
+				// Close the server
+				// server.close();
+			}
+	
+			// Redirect the user back to the webview
+			res.end();
+		});
+	  
+		const port = 3000; // Choose a port for your temporary server
+		server.listen(port, () => {
+			console.log(`Server listening on port: ${port}`)
+		});
+
 		// Set the webview's initial html content
 		const webview = this._panel.webview;
         this._panel.title = "TITLE OF SOMETHING";
 		this._panel.webview.html = this._getHtmlForWebview(webview);
 
 		const CLIENT_ID = "7cbd5d9d094d4aa38c18638efab08bce";
-		const REDIRECT_URI = "http://localhost:3000";
+		const REDIRECT_URI = "http://localhost:3000/spotify/callback";
 		const SCOPES = [
 		  'user-read-private',
 		  'user-read-email',
@@ -103,7 +129,7 @@ class CatCodingPanel {
 		  'playlist-modify-public',
 		  'playlist-modify-private',
 		];
-		
+
 		this._panel.webview.onDidReceiveMessage(message => {
 		  if (message.command === 'openSpotifyAuth') {
 		    const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(SCOPES.join(' '))}`;
