@@ -39,7 +39,7 @@ function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
 		// Enable javascript in the webview
 		enableScripts: true,
 
-		// And restrict the webview to only loading content from our extension's `media` directory.
+		// And restrict the webview to only loading content from our extension's `dist` directory.
 		localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'dist')]
 	};
 }
