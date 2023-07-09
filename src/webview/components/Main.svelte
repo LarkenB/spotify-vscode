@@ -1,17 +1,25 @@
 <script>
   const vscode = acquireVsCodeApi();
 
-  function handleClick() {
-    vscode.postMessage({
-      command: 'openSpotifyAuth',
-    });
-  }
+  let accessToken = ''
+
+  window.addEventListener('message', event => {
+    const message = event.data; // The JSON data our extension sent
+
+    switch (message.command) {
+        case 'access-token':
+            console.log(`TOKEN: ${message.accessToken}`);
+            accessToken = message.accessToken;
+            break;
+    }
+  });
+
+
 </script>
 
 <style>
 
 </style>
 
-<div class="container">
-  <button on:click={handleClick}>Redirect to Spotify</button>
-</div>
+
+<p>TOKEN: {accessToken}</p>

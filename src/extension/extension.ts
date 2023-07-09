@@ -9,16 +9,20 @@ const SCOPES = [
   'playlist-modify-private',
 ];
 
-const getSession = async () => {
+async function getSession() {
   const session = await vscode.authentication.getSession(AUTH_TYPE, SCOPES, {
     createIfNone: false,
   });
   if (session) {
+    if (CatCodingPanel.currentPanel) {
+      CatCodingPanel.currentPanel.sendAccessToken(session.accessToken);
+    }
+
     vscode.window.showInformationMessage(
       `Welcome back ${session.account.label}`,
     );
   }
-};
+}
 
 export function activate(context: vscode.ExtensionContext) {
   const subscriptions = context.subscriptions;
@@ -176,6 +180,13 @@ class CatCodingPanel {
     this._panel.webview.postMessage({ command: 'refactor' });
   }
 
+  public sendAccessToken(accessToken: string) {
+    this._panel.webview.postMessage({
+      command: 'access-token',
+      accessToken: accessToken,
+    });
+  }
+
   public dispose() {
     CatCodingPanel.currentPanel = undefined;
 
@@ -218,23 +229,6 @@ class CatCodingPanel {
 
     // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
-
-    /*
-        return `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}';">
-
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-              <title>Cat Coding</title>
-            </head>
-            <body>
-              <script nonce="${nonce}" src="${scriptUri}"></script>
-            </body>
-            </html>`;
-        */
 
     return `<!DOCTYPE html>
 			<html lang="en">

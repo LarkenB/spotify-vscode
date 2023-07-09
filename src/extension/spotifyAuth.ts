@@ -152,7 +152,7 @@ export class SpotifyAuthenticationProvider
   }
 
   /**
-   * Log in to Auth0
+   * Log in to Spotify
    */
   private async login(scopes: string[] = []) {
     return await window.withProgress<string>(
@@ -216,7 +216,7 @@ export class SpotifyAuthenticationProvider
   }
 
   /**
-   * Handle the redirect to VS Code (after sign in from Auth0)
+   * Handle the redirect to VS Code (after sign in from Spotify)
    * @param scopes
    * @returns
    */
@@ -226,9 +226,9 @@ export class SpotifyAuthenticationProvider
       const code = query.get('code');
       const state = query.get('state');
 
-      const access_token = await this.getAccessToken(code);
+      const accessToken = await this.getAccessToken(code);
 
-      if (!access_token) {
+      if (!accessToken) {
         reject(new Error('No token'));
         return;
       }
@@ -244,11 +244,11 @@ export class SpotifyAuthenticationProvider
         return;
       }
 
-      resolve(access_token);
+      resolve(accessToken);
     };
 
   /**
-   * Get the user info from Auth0
+   * Get the user info from Spotify
    * @param token
    * @returns
    */
