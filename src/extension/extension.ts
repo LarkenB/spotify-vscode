@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { AUTH_TYPE, SpotifyAuthenticationProvider } from './spotifyAuth';
 
+// TODO: delete all cat coding boilerplate references and clean up commands
+
+// TODO: move to another file
 const SCOPES = [
   'user-read-private',
   'user-read-email',
@@ -14,16 +17,7 @@ async function getSession() {
     createIfNone: false,
   });
 
-  if (session) {
-    if (SpotifyPanel.currentPanel) {
-      // Send accessToken to webview to be used
-      SpotifyPanel.currentPanel.sendAccessToken(session.accessToken);
-    }
-
-    // vscode.window.showInformationMessage(
-    //   `Welcome back ${session.account.label}`,
-    // );
-  }
+  return session;
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -33,41 +27,32 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'vscode-spotify-authprovider.signIn',
       async () => {
-        const session = await vscode.authentication.getSession(
-          AUTH_TYPE,
-          SCOPES,
-          { createIfNone: true },
-        );
-        console.log(session);
+        await vscode.authentication.getSession(AUTH_TYPE, SCOPES, {
+          createIfNone: true,
+        });
       },
     ),
   );
 
-  subscriptions.push(new SpotifyAuthenticationProvider(context));
-
-  getSession();
-
   subscriptions.push(
     vscode.authentication.onDidChangeSessions(async (e) => {
-      console.log(e);
-
       if (e.provider.id === AUTH_TYPE) {
-        getSession();
+        const session = await getSession();
+        const accessToken = session ? session.accessToken : undefined;
+
+        if (SpotifyPanel.currentPanel) {
+          // Send updated accessToken to webview to be used
+          SpotifyPanel.currentPanel.sendAccessToken(accessToken);
+        }
       }
     }),
   );
+
+  subscriptions.push(new SpotifyAuthenticationProvider(context));
 
   context.subscriptions.push(
     vscode.commands.registerCommand('catCoding.start', () => {
       SpotifyPanel.createOrShow(context.extensionUri);
-    }),
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('catCoding.doRefactor', () => {
-      if (SpotifyPanel.currentPanel) {
-        SpotifyPanel.currentPanel.doRefactor();
-      }
     }),
   );
 
@@ -91,14 +76,13 @@ function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
   return {
     // Enable javascript in the webview
     enableScripts: true,
-
     // And restrict the webview to only loading content from our extension's `dist` directory.
     localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'dist')],
   };
 }
 
 /**
- * Manages cat coding webview panels
+ * Manages spotify webview panels
  */
 class SpotifyPanel {
   /**
@@ -112,7 +96,7 @@ class SpotifyPanel {
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
 
-  public static createOrShow(extensionUri: vscode.Uri) {
+  public static async createOrShow(extensionUri: vscode.Uri) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
@@ -120,13 +104,19 @@ class SpotifyPanel {
     // If we already have a panel, show it.
     if (SpotifyPanel.currentPanel) {
       SpotifyPanel.currentPanel._panel.reveal(column);
+
+      // TODO: pretty sure this is wrong and can be removed
+      const session = await getSession();
+      if (session.accessToken) {
+        SpotifyPanel.currentPanel.sendAccessToken(session.accessToken);
+      }
       return;
     }
 
     // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(
       SpotifyPanel.viewType,
-      'Cat Coding',
+      'Spotify',
       column || vscode.ViewColumn.One,
       getWebviewOptions(extensionUri),
     );
@@ -134,7 +124,10 @@ class SpotifyPanel {
     SpotifyPanel.currentPanel = new SpotifyPanel(panel, extensionUri);
   }
 
-  public static revive(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  public static async revive(
+    panel: vscode.WebviewPanel,
+    extensionUri: vscode.Uri,
+  ) {
     SpotifyPanel.currentPanel = new SpotifyPanel(panel, extensionUri);
   }
 
@@ -144,23 +137,30 @@ class SpotifyPanel {
 
     // Set the webview's initial html content
     const webview = this._panel.webview;
-    this._panel.title = 'TITLE OF SOMETHING';
     this._panel.webview.html = this._getHtmlForWebview(webview);
+
+    // Send the current accessToken when making a new panel
+    getSession().then((session) => {
+      if (session) {
+        SpotifyPanel.currentPanel.sendAccessToken(session.accessToken);
+      }
+    });
 
     // Listen for when the panel is disposed
     // This happens when the user closes the panel or when the panel is closed programmatically
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     // Update the content based on view changes
-    // this._panel.onDidChangeViewState(
-    // 	e => {
-    // 		if (this._panel.visible) {
-    // 			this._update();
-    // 		}
-    // 	},
-    // 	null,
-    // 	this._disposables
-    // );
+    this._panel.onDidChangeViewState(
+      async () => {
+        const session = await getSession();
+        if (session) {
+          this.sendAccessToken(session.accessToken);
+        }
+      },
+      null,
+      this._disposables,
+    );
 
     // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
@@ -174,12 +174,6 @@ class SpotifyPanel {
       null,
       this._disposables,
     );
-  }
-
-  public doRefactor() {
-    // Send a message to the webview webview.
-    // You can send any JSON serializable data.
-    this._panel.webview.postMessage({ command: 'refactor' });
   }
 
   public sendAccessToken(accessToken: string) {
