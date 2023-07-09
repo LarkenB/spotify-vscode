@@ -4,7 +4,6 @@
   "description": "",
   "publisher": "larkenb",
   "private": true,
-  "type": "commonjs",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -50,6 +49,7 @@
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-typescript": "^11.1.2",
     "@tsconfig/svelte": "^5.0.0",
+    "@types/node": "^20.4.1",
     "@types/vscode": "^1.79.1",
     "rollup": "^3.26.0",
     "rollup-plugin-svelte": "^7.1.6",
@@ -57,5 +57,8 @@
     "svelte-preprocess": "^5.0.4",
     "tslib": "^2.6.0",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.1"
   }
 }

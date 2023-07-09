@@ -1,7 +1,48 @@
 import * as vscode from 'vscode';
-import * as http from 'http';
+import { AUTH_TYPE, SpotifyAuthenticationProvider } from './spotifyAuth';
+
+
+const SCOPES = [
+  'user-read-private',
+  'user-read-email',
+  'playlist-read-private',
+  'playlist-modify-public',
+  'playlist-modify-private',
+];
+
+const getSession = async () => {
+	const session = await vscode.authentication.getSession(AUTH_TYPE, SCOPES, { createIfNone: false });
+	if (session) {
+		vscode.window.showInformationMessage(`Welcome back ${session.account.label}`)
+	}
+}
 
 export function activate(context: vscode.ExtensionContext) {
+	const subscriptions = context.subscriptions;
+
+	subscriptions.push(
+		vscode.commands.registerCommand('vscode-spotify-authprovider.signIn', async () => {
+			const session = await vscode.authentication.getSession(AUTH_TYPE, SCOPES, { createIfNone: true });
+			console.log(session);
+		})
+	)
+
+	subscriptions.push(
+		new SpotifyAuthenticationProvider(context)
+	);
+
+	getSession();
+
+	subscriptions.push(
+		vscode.authentication.onDidChangeSessions(async e => {
+			console.log(e);
+
+			if (e.provider.id === AUTH_TYPE) {
+				getSession();
+			}
+		})
+	);
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('catCoding.start', () => {
 			CatCodingPanel.createOrShow(context.extensionUri);
@@ -85,8 +126,12 @@ class CatCodingPanel {
 		this._extensionUri = extensionUri;
 
 
+		//////////////////////////////////////
+		// 			  OLD AUTH				//
+		//////////////////////////////////////
 
 		// Start the temporary server
+		/*
 		const server = http.createServer((req, res) => {
 
 
@@ -109,33 +154,26 @@ class CatCodingPanel {
 			// Redirect the user back to the webview
 			res.end();
 		});
-	  
+		
 		const port = 3000; // Choose a port for your temporary server
 		server.listen(port, () => {
 			console.log(`Server listening on port: ${port}`)
 		});
+		*/ 
 
 		// Set the webview's initial html content
 		const webview = this._panel.webview;
         this._panel.title = "TITLE OF SOMETHING";
 		this._panel.webview.html = this._getHtmlForWebview(webview);
-
-		const CLIENT_ID = "7cbd5d9d094d4aa38c18638efab08bce";
-		const REDIRECT_URI = "http://localhost:3000/spotify/callback";
-		const SCOPES = [
-		  'user-read-private',
-		  'user-read-email',
-		  'playlist-read-private',
-		  'playlist-modify-public',
-		  'playlist-modify-private',
-		];
-
+		
+		/*
 		this._panel.webview.onDidReceiveMessage(message => {
 		  if (message.command === 'openSpotifyAuth') {
 		    const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(SCOPES.join(' '))}`;
 		    vscode.env.openExternal(vscode.Uri.parse(authUrl));
 		  }
 		});
+		*/
 
 		// Listen for when the panel is disposed
 		// This happens when the user closes the panel or when the panel is closed programmatically

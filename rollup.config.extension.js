@@ -5,7 +5,7 @@ import typescript from '@rollup/plugin-typescript';
 export default {
   input: 'src/extension/extension.ts',
   output: {
-    file: 'dist/extension.js',
+    dir: 'dist',
     format: 'cjs',
     sourcemap: 'inline',
   },
