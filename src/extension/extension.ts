@@ -136,54 +136,10 @@ class CatCodingPanel {
     this._panel = panel;
     this._extensionUri = extensionUri;
 
-    //////////////////////////////////////
-    // 			  OLD AUTH				//
-    //////////////////////////////////////
-
-    // Start the temporary server
-    /*
-		const server = http.createServer((req, res) => {
-
-
-			console.log(req.url);
-
-			const url = req.url;
-			if (url.startsWith('/spotify/callback')) {
-				  // Extract the authorization code from the URL
-				  const code = url.split('=')[1];
-				
-				  console.log(`CODE: ${code}`);
-	
-				  /// Send the success response
-				//res.writeHead(200, { 'Content-Type': 'text/html' });
-				//res.end('Authentication successful. You can now close this page and return to the VS Code extension.');
-				// Close the server
-				// server.close();
-			}
-	
-			// Redirect the user back to the webview
-			res.end();
-		});
-		
-		const port = 3000; // Choose a port for your temporary server
-		server.listen(port, () => {
-			console.log(`Server listening on port: ${port}`)
-		});
-		*/
-
     // Set the webview's initial html content
     const webview = this._panel.webview;
     this._panel.title = 'TITLE OF SOMETHING';
     this._panel.webview.html = this._getHtmlForWebview(webview);
-
-    /*
-		this._panel.webview.onDidReceiveMessage(message => {
-		  if (message.command === 'openSpotifyAuth') {
-		    const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(SCOPES.join(' '))}`;
-		    vscode.env.openExternal(vscode.Uri.parse(authUrl));
-		  }
-		});
-		*/
 
     // Listen for when the panel is disposed
     // This happens when the user closes the panel or when the panel is closed programmatically
