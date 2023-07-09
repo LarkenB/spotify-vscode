@@ -1,33 +1,15 @@
 import { authentication, type AuthenticationProvider, type AuthenticationProviderAuthenticationSessionsChangeEvent, type AuthenticationSession, Disposable, env, EventEmitter, type ExtensionContext, ProgressLocation, Uri, type UriHandler, window } from "vscode";
-import { type PromiseAdapter, promiseFromEvent } from "./util";
+import { type PromiseAdapter, promiseFromEvent, uuid } from "./util";
 import fetch from 'node-fetch';
 
-const uuid = () => {
-    const hexDigits = '0123456789abcdef';
-    let uuid = '';
-  
-    for (let i = 0; i < 32; i++) {
-      uuid += hexDigits.charAt(Math.floor(Math.random() * 16));
-    }
-  
-    // Insert hyphens at the appropriate positions to match the UUID format
-    uuid = `${uuid.substr(0, 8)}-${uuid.substr(8, 4)}-${uuid.substr(12, 4)}-${uuid.substr(16, 4)}-${uuid.substr(20)}`;
-  
-    return uuid;
-};
+// TODO: move to .env file
+const CLIENT_ID = "7cbd5d9d094d4aa38c18638efab08bce";
+const CLIENT_SECRET = "b180d72de8324985ac860ed305388d88";
 
 export const AUTH_TYPE = `spotify`;
 const AUTH_NAME = `Spotify`;
-const CLIENT_ID = "7cbd5d9d094d4aa38c18638efab08bce";
-const CLIENT_SECRET = "b180d72de8324985ac860ed305388d88";
 const SPOTIFY_DOMAIN = `accounts.spotify.com`;
 const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
-
-class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
-	public handleUri(uri: Uri) {
-		this.fire(uri);
-	}
-}
 
 export class SpotifyAuthenticationProvider implements AuthenticationProvider, Disposable {
   private _sessionChangeEmitter = new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>();
@@ -187,7 +169,6 @@ export class SpotifyAuthenticationProvider implements AuthenticationProvider, Di
     const code = query.get('code');
     const state = query.get('state');
 
-
     const access_token = await this.getAccessToken(code);
 
     if (!access_token) {
@@ -223,6 +204,7 @@ export class SpotifyAuthenticationProvider implements AuthenticationProvider, Di
     return await response.json();
   }
 
+  // Exchange Spotify access code for an access token
   private async getAccessToken(code: string): Promise<string> {
 
     const searchParams = new URLSearchParams([
@@ -240,10 +222,21 @@ export class SpotifyAuthenticationProvider implements AuthenticationProvider, Di
         body: searchParams.toString()
     })
 
-    // TODO: use refresh token and find a better way to extract this
-    const json = (await response.json()) as any;
+    // TODO: Handle the refresh token
+    const responseData: {} | { access_token: string } = await response.json();
 
-    return json.access_token;
+    if ('access_token' in responseData) {
+        const accessToken = (responseData as any).access_token;
+        return accessToken;
+    } else {
+        throw new Error('Access token not found in Spotify response');
+    }
   }
 
+}
+
+class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
+	public handleUri(uri: Uri) {
+		this.fire(uri);
+	}
 }

@@ -10,6 +10,20 @@ export interface PromiseAdapter<T, U> {
 	): any;
 }
 
+export const uuid = () => {
+    const hexDigits = '0123456789abcdef';
+    let uuid = '';
+  
+    for (let i = 0; i < 32; i++) {
+      uuid += hexDigits.charAt(Math.floor(Math.random() * 16));
+    }
+  
+    // Insert hyphens at the appropriate positions to match the UUID format
+    uuid = `${uuid.substr(0, 8)}-${uuid.substr(8, 4)}-${uuid.substr(12, 4)}-${uuid.substr(16, 4)}-${uuid.substr(20)}`;
+  
+    return uuid;
+};
+
 const passthrough = (value: any, resolve: (value?: any) => void) => resolve(value);
 
 /**
