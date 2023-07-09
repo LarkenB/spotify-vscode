@@ -182,7 +182,7 @@ class CatCodingPanel {
 
   public sendAccessToken(accessToken: string) {
     this._panel.webview.postMessage({
-      command: 'access-token',
+      command: 'accessToken',
       accessToken: accessToken,
     });
   }
