@@ -13,14 +13,16 @@ async function getSession() {
   const session = await vscode.authentication.getSession(AUTH_TYPE, SCOPES, {
     createIfNone: false,
   });
+
   if (session) {
-    if (CatCodingPanel.currentPanel) {
-      CatCodingPanel.currentPanel.sendAccessToken(session.accessToken);
+    if (SpotifyPanel.currentPanel) {
+      // Send accessToken to webview to be used
+      SpotifyPanel.currentPanel.sendAccessToken(session.accessToken);
     }
 
-    vscode.window.showInformationMessage(
-      `Welcome back ${session.account.label}`,
-    );
+    // vscode.window.showInformationMessage(
+    //   `Welcome back ${session.account.label}`,
+    // );
   }
 }
 
@@ -57,21 +59,21 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand('catCoding.start', () => {
-      CatCodingPanel.createOrShow(context.extensionUri);
+      SpotifyPanel.createOrShow(context.extensionUri);
     }),
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand('catCoding.doRefactor', () => {
-      if (CatCodingPanel.currentPanel) {
-        CatCodingPanel.currentPanel.doRefactor();
+      if (SpotifyPanel.currentPanel) {
+        SpotifyPanel.currentPanel.doRefactor();
       }
     }),
   );
 
   if (vscode.window.registerWebviewPanelSerializer) {
     // Make sure we register a serializer in activation event
-    vscode.window.registerWebviewPanelSerializer(CatCodingPanel.viewType, {
+    vscode.window.registerWebviewPanelSerializer(SpotifyPanel.viewType, {
       async deserializeWebviewPanel(
         webviewPanel: vscode.WebviewPanel,
         state: any,
@@ -79,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
         console.log(`Got state: ${state}`);
         // Reset the webview options so we use latest uri for `localResourceRoots`.
         webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-        CatCodingPanel.revive(webviewPanel, context.extensionUri);
+        SpotifyPanel.revive(webviewPanel, context.extensionUri);
       },
     });
   }
@@ -98,11 +100,11 @@ function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
 /**
  * Manages cat coding webview panels
  */
-class CatCodingPanel {
+class SpotifyPanel {
   /**
    * Track the currently panel. Only allow a single panel to exist at a time.
    */
-  public static currentPanel: CatCodingPanel | undefined;
+  public static currentPanel: SpotifyPanel | undefined;
 
   public static readonly viewType = 'catCoding';
 
@@ -116,24 +118,24 @@ class CatCodingPanel {
       : undefined;
 
     // If we already have a panel, show it.
-    if (CatCodingPanel.currentPanel) {
-      CatCodingPanel.currentPanel._panel.reveal(column);
+    if (SpotifyPanel.currentPanel) {
+      SpotifyPanel.currentPanel._panel.reveal(column);
       return;
     }
 
     // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(
-      CatCodingPanel.viewType,
+      SpotifyPanel.viewType,
       'Cat Coding',
       column || vscode.ViewColumn.One,
       getWebviewOptions(extensionUri),
     );
 
-    CatCodingPanel.currentPanel = new CatCodingPanel(panel, extensionUri);
+    SpotifyPanel.currentPanel = new SpotifyPanel(panel, extensionUri);
   }
 
   public static revive(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-    CatCodingPanel.currentPanel = new CatCodingPanel(panel, extensionUri);
+    SpotifyPanel.currentPanel = new SpotifyPanel(panel, extensionUri);
   }
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
@@ -188,7 +190,7 @@ class CatCodingPanel {
   }
 
   public dispose() {
-    CatCodingPanel.currentPanel = undefined;
+    SpotifyPanel.currentPanel = undefined;
 
     // Clean up our resources
     this._panel.dispose();
@@ -204,7 +206,7 @@ class CatCodingPanel {
   private _update() {
     const webview = this._panel.webview;
 
-    this._panel.title = 'TITLE OF SOMETHING';
+    this._panel.title = 'Spotify'; // Title of panel tab in editor
     this._panel.webview.html = this._getHtmlForWebview(webview);
   }
 
