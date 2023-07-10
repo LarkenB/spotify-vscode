@@ -1,5 +1,6 @@
 <script lang="ts">
   import { accessToken } from '../store';
+  import Check from "svelte-material-icons/Check.svelte";
 </script>
 
 <style>
@@ -8,3 +9,4 @@
 
 
 <p>TOKEN: {$accessToken}</p>
+<Check />
