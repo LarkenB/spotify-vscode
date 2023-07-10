@@ -10,6 +10,7 @@ const SCOPES = [
   'playlist-read-private',
   'playlist-modify-public',
   'playlist-modify-private',
+  'user-read-playback-state'
 ];
 
 async function getSession() {
@@ -38,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === AUTH_TYPE) {
         const session = await getSession();
-        const accessToken = session ? session.accessToken : undefined;
+        const accessToken = session ? session.accessToken : null;
 
         if (SpotifyPanel.currentPanel) {
           // Send updated accessToken to webview to be used
@@ -235,7 +236,7 @@ class SpotifyPanel {
 					Use a content security policy to only allow loading images from https or from our extension directory,
 					and only allow scripts that have a specific nonce.
 				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}'; connect-src https://api.spotify.com/;">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
