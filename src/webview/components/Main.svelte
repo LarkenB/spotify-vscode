@@ -3,96 +3,29 @@
   import Check from "svelte-material-icons/Check.svelte";
   import IconButton from '@smui/icon-button';
   import { onMount, onDestroy } from 'svelte';
+  import { pause, getCurrentTrack, skipToPrevious, skipToNext } from '../spotify/endpoints'
 
-  async function pause() {
-    if (!$accessToken) return;
-
-    fetch(`https://api.spotify.com/v1/me/player/pause`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${$accessToken}`,
-      }
-    });
+  async function onPause() {
+    await pause($accessToken);
+    getCurrentTrack($accessToken);
   }
 
-  async function skipToNext() {
-    if (!$accessToken) return;
-
-    await fetch(`https://api.spotify.com/v1/me/player/next`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${$accessToken}`,
-      }
-    });
-
-    getCurrentTrack();
+  async function onSkipToNext() {
+    await skipToNext($accessToken);
+    getCurrentTrack($accessToken);
   }
 
-  async function skipToPrevious() {
-    if (!$accessToken) return;
-
-    await fetch(`https://api.spotify.com/v1/me/player/previous`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${$accessToken}`,
-      }
-    });
-
-    getCurrentTrack();
-  }
-
-  async function getCurrentTrack() {
-    if (!$accessToken) return;
-
-    try {
-      const response = await fetch(`https://api.spotify.com/v1/me/player/currently-playing`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${$accessToken}`,
-        }
-      });
-
-      switch(response.status) {
-        case 200: {
-          currentTrack.set((await response.json()).item as Track);
-          return;
-        }
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
-  }
-
-  async function updatePlaybackState() {
-    if (!$accessToken) return;
-
-    try {
-      const response = await fetch(`https://api.spotify.com/v1/me/player`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${$accessToken}`,
-        }
-      });
-
-      switch(response.status) {
-        case 200: {
-          currentTrack.set((await response.json()).item as Track);
-          return;
-        }
-        case 204: {
-          // Playback not available or active
-          return;
-        }
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
+  async function onSkipToPrevious() {
+    await skipToPrevious($accessToken);
+    getCurrentTrack($accessToken);
   }
 
   let intervalId;
 
   onMount(() => {
-    intervalId = setInterval(getCurrentTrack, 5000);
+    intervalId = setInterval(async () => {
+      currentTrack.set(await getCurrentTrack($accessToken))
+    }, 5000);
   });
 
   onDestroy(() => {
@@ -132,13 +65,13 @@
 <p>NO CURRENT TRACK</p>
 {/if}
 <div>
-  <IconButton on:click={skipToPrevious} class="material-icons" ripple={false}>
+  <IconButton on:click={onSkipToPrevious} class="material-icons" ripple={false}>
     skip_previous
   </IconButton>
-  <IconButton on:click={pause} class="material-icons" ripple={false}>
+  <IconButton on:click={onPause} class="material-icons" ripple={false}>
     pause
   </IconButton>
-  <IconButton on:click={skipToNext} class="material-icons" ripple={false}>
+  <IconButton on:click={onSkipToNext} class="material-icons" ripple={false}>
     skip_next
   </IconButton>
 </div>
