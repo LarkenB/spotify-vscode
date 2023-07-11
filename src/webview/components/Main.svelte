@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { accessToken } from '../store';
+  import { accessToken, currentTrack } from '../store';
   import Check from "svelte-material-icons/Check.svelte";
   import IconButton from '@smui/icon-button';
+  import { onMount, onDestroy } from 'svelte';
 
-  function pause() {
+  async function pause() {
     if (!$accessToken) return;
 
     fetch(`https://api.spotify.com/v1/me/player/pause`, {
@@ -14,66 +15,89 @@
     });
   }
 
-  function skipToNext() {
+  async function skipToNext() {
     if (!$accessToken) return;
 
-    fetch(`https://api.spotify.com/v1/me/player/next`, {
+    await fetch(`https://api.spotify.com/v1/me/player/next`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${$accessToken}`,
       }
     });
+
+    getCurrentTrack();
   }
 
-  function skipToPrevious() {
+  async function skipToPrevious() {
     if (!$accessToken) return;
 
-    fetch(`https://api.spotify.com/v1/me/player/previous`, {
+    await fetch(`https://api.spotify.com/v1/me/player/previous`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${$accessToken}`,
       }
     });
+
+    getCurrentTrack();
   }
 
-  let currentTrack: Track | null = null;
+  async function getCurrentTrack() {
+    if (!$accessToken) return;
 
-  accessToken.subscribe(async (value) => {
-    if (!value) {
-      currentTrack = null;
-      return;
-    };
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/me/player/currently-playing`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${$accessToken}`,
+        }
+      });
 
-    const response = await fetch(`https://api.spotify.com/v1/me/player`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${value}`,
+      switch(response.status) {
+        case 200: {
+          currentTrack.set((await response.json()).item as Track);
+          return;
+        }
       }
-    });
-
-    switch(response.status) {
-      case 200: {
-        currentTrack = (await response.json()).item as Track;
-        return;
-      }
-      case 204: {
-        // Playback not available or active
-        return;
-      }
-      case 401: {
-        // Bad or expired token
-        return;
-      }
-      case 403: {
-        // Bad OAuth request
-        return;
-      }
-      case 429: {
-        // The app has exceeded its rate limits.
-        return;
-      }
+    } catch (error) {
+      console.error('An error occurred:', error);
     }
-	});
+  }
+
+  async function updatePlaybackState() {
+    if (!$accessToken) return;
+
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/me/player`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${$accessToken}`,
+        }
+      });
+
+      switch(response.status) {
+        case 200: {
+          currentTrack.set((await response.json()).item as Track);
+          return;
+        }
+        case 204: {
+          // Playback not available or active
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
+  }
+
+  let intervalId;
+
+  onMount(() => {
+    intervalId = setInterval(getCurrentTrack, 5000);
+  });
+
+  onDestroy(() => {
+    clearInterval(intervalId);
+  });
 </script>
 
 <style>
@@ -102,7 +126,11 @@
 </svelte:head>
 
 <p>TOKEN: {$accessToken}</p>
-<Check />
+{#if $currentTrack}
+  <img src={$currentTrack.album.images[0].url} alt={$currentTrack.name} />
+{:else}
+<p>NO CURRENT TRACK</p>
+{/if}
 <div>
   <IconButton on:click={skipToPrevious} class="material-icons" ripple={false}>
     skip_previous
@@ -114,4 +142,4 @@
     skip_next
   </IconButton>
 </div>
-<p>CURRENT TRACK: {currentTrack?.name}</p>
+<p>CURRENT TRACK: {$currentTrack?.name}</p>
