@@ -6,6 +6,16 @@
   import SkipPrevious from "svelte-material-icons/SkipPrevious.svelte";
   import IconButton from '@smui/icon-button';
 
+  function pause() {
+    if (!$accessToken) return;
+
+    fetch(`https://api.spotify.com/v1/me/player/pause`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${$accessToken}`,
+      }
+    });
+  }
 
   function skipToNext() {
     if (!$accessToken) return;
@@ -78,7 +88,7 @@
 <Check />
 <div>
   <IconButton on:click={skipToPrevious} class="material-icons" ripple={false}>skip_previous</IconButton>
-  <IconButton class="material-icons" ripple={false}>pause</IconButton>
+  <IconButton on:click={pause} class="material-icons" ripple={false}>pause</IconButton>
   <IconButton on:click={skipToNext} class="material-icons" ripple={false}>skip_next</IconButton>
 </div>
 <p>CURRENT TRACK: {currentTrack?.name}</p>
