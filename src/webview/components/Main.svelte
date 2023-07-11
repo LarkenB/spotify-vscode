@@ -1,9 +1,6 @@
 <script lang="ts">
   import { accessToken } from '../store';
   import Check from "svelte-material-icons/Check.svelte";
-  import SkipNext from "svelte-material-icons/SkipNext.svelte";
-  import Pause from "svelte-material-icons/Pause.svelte";
-  import SkipPrevious from "svelte-material-icons/SkipPrevious.svelte";
   import IconButton from '@smui/icon-button';
 
   function pause() {
@@ -83,12 +80,38 @@
 
 </style>
 
+<svelte:head>
+  <!-- Fonts -->
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,600,700"
+  />
+
+  <!-- Material Typography -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/@material/typography@14.0.0/dist/mdc.typography.css"
+  />
+
+  <!-- SMUI -->
+  <link rel="stylesheet" href="https://unpkg.com/svelte-material-ui/bare.css" />
+</svelte:head>
 
 <p>TOKEN: {$accessToken}</p>
 <Check />
 <div>
-  <IconButton on:click={skipToPrevious} class="material-icons" ripple={false}>skip_previous</IconButton>
-  <IconButton on:click={pause} class="material-icons" ripple={false}>pause</IconButton>
-  <IconButton on:click={skipToNext} class="material-icons" ripple={false}>skip_next</IconButton>
+  <IconButton on:click={skipToPrevious} class="material-icons" ripple={false}>
+    skip_previous
+  </IconButton>
+  <IconButton on:click={pause} class="material-icons" ripple={false}>
+    pause
+  </IconButton>
+  <IconButton on:click={skipToNext} class="material-icons" ripple={false}>
+    skip_next
+  </IconButton>
 </div>
 <p>CURRENT TRACK: {currentTrack?.name}</p>
