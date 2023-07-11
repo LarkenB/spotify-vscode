@@ -10,7 +10,8 @@ const SCOPES = [
   'playlist-read-private',
   'playlist-modify-public',
   'playlist-modify-private',
-  'user-read-playback-state'
+  'user-read-playback-state',
+  'user-modify-playback-state'
 ];
 
 async function getSession() {
