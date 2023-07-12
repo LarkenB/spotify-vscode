@@ -32,7 +32,8 @@
 <div bind:this={parentDiv} style="width: 100%;">
 {#if isScrolling}
     <Marquee direction='right' play={true}>
-        <h1 class="text" bind:this={h1Element}>{text}</h1>
+        <!-- The extra space below keeps text from touching when wrapping -->
+        <h1 style="padding-left: 10px;" class="text" bind:this={h1Element}>{`${text} `}</h1>
     </Marquee>
 {:else}
     <h1 style="white-space: nowrap; width: fit-content;" class="text" bind:this={h1Element}>{text}</h1>
