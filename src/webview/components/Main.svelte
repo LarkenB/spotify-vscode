@@ -5,6 +5,7 @@
   import PreviousButton from './PreviousButton.svelte';
   import NextButton from './NextButton.svelte';
   import PausePlayButton from './PausePlayButton.svelte';
+    import AlbumCover from './AlbumCover.svelte';
 
   let intervalId;
 
@@ -42,7 +43,7 @@
 
 <p>TOKEN: {$accessToken}</p>
 {#if $currentTrack}
-  <img src={$currentTrack.album.images[0].url} alt={$currentTrack.name} />
+  <AlbumCover src={$currentTrack.album.images[0].url}/>
 {:else}
 <p>NO CURRENT TRACK</p>
 {/if}

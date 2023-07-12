@@ -160,7 +160,7 @@ class SpotifyViewProvider implements vscode.WebviewViewProvider {
 					and only allow scripts that have a specific nonce.
 				-->
 
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src 'self' data: https:; style-src ${webview.cspSource} http: https:; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}'; connect-src https://api.spotify.com/;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src 'self' data: https:; style-src ${webview.cspSource} 'unsafe-inline' http: https:; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}'; connect-src https://api.spotify.com/;">
         
         <!-- This would allow us to use the spotify web playback sdk, but electron/vscode does not support changing the feature policy
         <meta http-equiv="Feature-Policy" content="encrypted-media 'self' https://sdk.scdn.co/spotify-player.js;">
