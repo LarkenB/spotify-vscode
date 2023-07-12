@@ -7,6 +7,10 @@
   "engines": {
     "vscode": "^1.74.0"
   },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
   "categories": [
     "Other"
   ],
@@ -15,6 +19,15 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "spotify-vscode.view",
+          "name": "Spotify"
+        }
+      ]
+    },
     "webviews": [
       {
         "viewId": "catCoding",

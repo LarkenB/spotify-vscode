@@ -1,24 +1,10 @@
 <script lang="ts">
   import { accessToken, currentTrack } from '../store';
-  import Check from "svelte-material-icons/Check.svelte";
-  import IconButton from '@smui/icon-button';
   import { onMount, onDestroy } from 'svelte';
-  import { pause, getCurrentTrack, skipToPrevious, skipToNext } from '../spotify/endpoints'
-
-  async function onPause() {
-    await pause($accessToken);
-    getCurrentTrack($accessToken);
-  }
-
-  async function onSkipToNext() {
-    await skipToNext($accessToken);
-    getCurrentTrack($accessToken);
-  }
-
-  async function onSkipToPrevious() {
-    await skipToPrevious($accessToken);
-    getCurrentTrack($accessToken);
-  }
+  import { getCurrentTrack } from '../spotify/endpoints'
+  import PreviousButton from './PreviousButton.svelte';
+  import NextButton from './NextButton.svelte';
+  import PausePlayButton from './PausePlayButton.svelte';
 
   let intervalId;
 
@@ -32,10 +18,6 @@
     clearInterval(intervalId);
   });
 </script>
-
-<style>
-
-</style>
 
 <svelte:head>
   <!-- Fonts -->
@@ -65,14 +47,8 @@
 <p>NO CURRENT TRACK</p>
 {/if}
 <div>
-  <IconButton on:click={onSkipToPrevious} class="material-icons" ripple={false}>
-    skip_previous
-  </IconButton>
-  <IconButton on:click={onPause} class="material-icons" ripple={false}>
-    pause
-  </IconButton>
-  <IconButton on:click={onSkipToNext} class="material-icons" ripple={false}>
-    skip_next
-  </IconButton>
+  <PreviousButton />
+  <PausePlayButton />
+  <NextButton />
 </div>
 <p>CURRENT TRACK: {$currentTrack?.name}</p>
