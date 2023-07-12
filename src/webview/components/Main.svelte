@@ -5,7 +5,8 @@
   import PreviousButton from './PreviousButton.svelte';
   import NextButton from './NextButton.svelte';
   import PausePlayButton from './PausePlayButton.svelte';
-    import AlbumCover from './AlbumCover.svelte';
+  import AlbumCover from './AlbumCover.svelte';
+  import ScrollingText from './ScrollingText.svelte';
 
   let intervalId;
 
@@ -43,9 +44,11 @@
 
 <p>TOKEN: {$accessToken}</p>
 {#if $currentTrack}
-  <AlbumCover src={$currentTrack.album.images[0].url}/>
+  <AlbumCover src={$currentTrack.album.images[0].url} />
+  <ScrollingText text={$currentTrack.name} />
+  <p>{$currentTrack.artists[0].name}</p>
 {:else}
-<p>NO CURRENT TRACK</p>
+  <p>NO CURRENT TRACK</p>
 {/if}
 <div>
   <PreviousButton />
