@@ -23,9 +23,14 @@ async function getSession() {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  const subscriptions = context.subscriptions;
 
-  subscriptions.push(
+  const provider = new SpotifyViewProvider(context.extensionUri);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(SpotifyViewProvider.viewType, provider)
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       'vscode-spotify-authprovider.signIn',
       async () => {
@@ -36,43 +41,166 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
-  subscriptions.push(
+  context.subscriptions.push(
     vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === AUTH_TYPE) {
         const session = await getSession();
         const accessToken = session ? session.accessToken : null;
 
-        if (SpotifyPanel.currentPanel) {
-          // Send updated accessToken to webview to be used
-          SpotifyPanel.currentPanel.sendAccessToken(accessToken);
+        if (SpotifyViewProvider.currentProvider) {
+          SpotifyViewProvider.currentProvider.sendAccessToken(accessToken);
         }
       }
     }),
   );
 
-  subscriptions.push(new SpotifyAuthenticationProvider(context));
-
   context.subscriptions.push(
-    vscode.commands.registerCommand('catCoding.start', () => {
-      SpotifyPanel.createOrShow(context.extensionUri);
-    }),
+    new SpotifyAuthenticationProvider(context)
   );
+}
 
-  if (vscode.window.registerWebviewPanelSerializer) {
-    // Make sure we register a serializer in activation event
-    vscode.window.registerWebviewPanelSerializer(SpotifyPanel.viewType, {
-      async deserializeWebviewPanel(
-        webviewPanel: vscode.WebviewPanel,
-        state: any,
-      ) {
-        console.log(`Got state: ${state}`);
-        // Reset the webview options so we use latest uri for `localResourceRoots`.
-        webviewPanel.webview.options = getWebviewOptions(context.extensionUri);
-        SpotifyPanel.revive(webviewPanel, context.extensionUri);
+class SpotifyViewProvider implements vscode.WebviewViewProvider {
+
+  public static readonly viewType = 'spotify-vscode.view';
+
+  public static currentProvider?: SpotifyViewProvider;
+
+  private _view?: vscode.WebviewView;
+  private _disposables: vscode.Disposable[] = [];
+
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+  ) { }
+
+  public resolveWebviewView(
+		webviewView: vscode.WebviewView,
+		_context: vscode.WebviewViewResolveContext,
+		_token: vscode.CancellationToken,
+	) {
+    SpotifyViewProvider.currentProvider = this;
+
+		this._view = webviewView;
+
+		webviewView.webview.options = getWebviewOptions(this._extensionUri);
+
+		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+     // Send the current accessToken when resolving webview view
+     getSession().then((session) => {
+      if (session) {
+        this.sendAccessToken(session.accessToken);
+      }
+    });
+
+    // Listen for when the panel is disposed
+    // This happens when the user closes the panel or when the panel is closed programmatically
+    this._view.onDidDispose(() => this.dispose(), null, this._disposables);
+
+    this._view.onDidChangeVisibility(
+      async () => {
+        const session = await getSession();
+        if (session) {
+          this.sendAccessToken(session.accessToken);
+        }
       },
+      null,
+      this._disposables,
+    );
+
+    // Handle messages from the webview
+    webviewView.webview.onDidReceiveMessage(
+      (message) => {
+        switch (message.command) {
+          case 'alert':
+            vscode.window.showErrorMessage(message.text);
+            return;
+        }
+      },
+      null,
+      this._disposables,
+    );
+	}
+
+  public sendAccessToken(accessToken: string) {
+    this._view.webview.postMessage({
+      command: 'accessToken',
+      accessToken: accessToken,
     });
   }
+
+  public dispose() {
+    while (this._disposables.length) {
+      const x = this._disposables.pop();
+      if (x) {
+        x.dispose();
+      }
+    }
+  }
+
+  private _getHtmlForWebview(webview: vscode.Webview) {
+    // Local path to main script run in the webview
+    const scriptPathOnDisk = vscode.Uri.joinPath(
+      this._extensionUri,
+      'dist',
+      'webview.js',
+    );
+
+    // And the uri we use to load this script in the webview
+    const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
+
+    // Use a nonce to only allow specific scripts to be run
+    const nonce = getNonce();
+
+    // TODO: load html from file? (would give better syntax highlighting and such when changing the html)
+    return `<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+
+				<!--
+					Use a content security policy to only allow loading images from https or from our extension directory,
+					and only allow scripts that have a specific nonce.
+				-->
+
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src 'self' data: https:; style-src ${webview.cspSource} http: https:; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}'; connect-src https://api.spotify.com/;">
+        
+        <!-- This would allow us to use the spotify web playback sdk, but electron/vscode does not support changing the feature policy
+        <meta http-equiv="Feature-Policy" content="encrypted-media 'self' https://sdk.scdn.co/spotify-player.js;">
+        -->
+
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+				<title>Cat Coding</title>
+			</head>
+			<body>
+				<script nonce="${nonce}" src="${scriptUri}"></script>
+			</body>
+			</html>`;
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
   return {
@@ -86,10 +214,8 @@ function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
 /**
  * Manages spotify webview panels
  */
+/*
 class SpotifyPanel {
-  /**
-   * Track the currently panel. Only allow a single panel to exist at a time.
-   */
   public static currentPanel: SpotifyPanel | undefined;
 
   public static readonly viewType = 'catCoding';
@@ -255,6 +381,7 @@ class SpotifyPanel {
 			</html>`;
   }
 }
+*/
 
 function getNonce() {
   let text = '';

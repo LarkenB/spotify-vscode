@@ -27,25 +27,7 @@
           "name": "Spotify"
         }
       ]
-    },
-    "webviews": [
-      {
-        "viewId": "catCoding",
-        "resources": [
-          {
-            "path": "dist/webview.js",
-            "resourceType": "workspace"
-          }
-        ]
-      }
-    ],
-    "commands": [
-      {
-        "command": "catCoding.start",
-        "title": "Start cat coding session",
-        "category": "Cat Coding"
-      }
-    ]
+    }
   },
   "scripts": {
     "build:extension": "rollup -c rollup.config.extension.js --bundleConfigAsCjs",
