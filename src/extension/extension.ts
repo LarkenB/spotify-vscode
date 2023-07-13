@@ -9,7 +9,7 @@ const SCOPES = [
   'playlist-modify-public',
   'playlist-modify-private',
   'user-read-playback-state',
-  'user-modify-playback-state'
+  'user-modify-playback-state',
 ];
 
 async function getSession() {
@@ -21,11 +21,13 @@ async function getSession() {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-
   const provider = new SpotifyViewProvider(context.extensionUri);
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(SpotifyViewProvider.viewType, provider)
+    vscode.window.registerWebviewViewProvider(
+      SpotifyViewProvider.viewType,
+      provider,
+    ),
   );
 
   context.subscriptions.push(
@@ -52,13 +54,10 @@ export function activate(context: vscode.ExtensionContext) {
     }),
   );
 
-  context.subscriptions.push(
-    new SpotifyAuthenticationProvider(context)
-  );
+  context.subscriptions.push(new SpotifyAuthenticationProvider(context));
 }
 
 class SpotifyViewProvider implements vscode.WebviewViewProvider {
-
   public static readonly viewType = 'spotify-vscode.view';
 
   public static currentProvider?: SpotifyViewProvider;
@@ -66,25 +65,23 @@ class SpotifyViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _disposables: vscode.Disposable[] = [];
 
-  constructor(
-    private readonly _extensionUri: vscode.Uri,
-  ) { }
+  constructor(private readonly _extensionUri: vscode.Uri) {}
 
   public resolveWebviewView(
-		webviewView: vscode.WebviewView,
-		_context: vscode.WebviewViewResolveContext,
-		_token: vscode.CancellationToken,
-	) {
+    webviewView: vscode.WebviewView,
+    _context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken,
+  ) {
     SpotifyViewProvider.currentProvider = this;
 
-		this._view = webviewView;
+    this._view = webviewView;
 
-		webviewView.webview.options = getWebviewOptions(this._extensionUri);
+    webviewView.webview.options = getWebviewOptions(this._extensionUri);
 
-		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-     // Send the current accessToken when resolving webview view
-     getSession().then((session) => {
+    // Send the current accessToken when resolving webview view
+    getSession().then((session) => {
       if (session) {
         this.sendAccessToken(session.accessToken);
       }
@@ -117,7 +114,7 @@ class SpotifyViewProvider implements vscode.WebviewViewProvider {
       null,
       this._disposables,
     );
-	}
+  }
 
   public sendAccessToken(accessToken: string) {
     this._view.webview.postMessage({
