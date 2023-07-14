@@ -21,6 +21,22 @@
   });
 </script>
 
+<!--<p>TOKEN: {$accessToken}</p>-->
+{#if $currentTrack}
+  <AlbumCover src={$currentTrack.album.images[0].url} />
+  <ScrollingText> 
+    <h1>{$currentTrack.name}</h1>
+  </ScrollingText>
+  <p>{$currentTrack.artists.map((artist) => artist.name).join(', ')}</p>
+{:else}
+  <p>NO CURRENT TRACK</p>
+{/if}
+<div>
+  <PreviousButton />
+  <PausePlayButton />
+  <NextButton />
+</div>
+
 <svelte:head>
   <!-- Fonts -->
   <link
@@ -41,20 +57,3 @@
   <!-- SMUI -->
   <link rel="stylesheet" href="https://unpkg.com/svelte-material-ui/bare.css" />
 </svelte:head>
-
-<p>TOKEN: {$accessToken}</p>
-{#if $currentTrack}
-  <AlbumCover src={$currentTrack.album.images[0].url} />
-  <ScrollingText> 
-    <h1>{$currentTrack.name}</h1>
-  </ScrollingText>
-  <p>{$currentTrack.artists[0].name}</p>
-{:else}
-  <p>NO CURRENT TRACK</p>
-{/if}
-<div>
-  <PreviousButton />
-  <PausePlayButton />
-  <NextButton />
-</div>
-<p>CURRENT TRACK: {$currentTrack?.name}</p>
