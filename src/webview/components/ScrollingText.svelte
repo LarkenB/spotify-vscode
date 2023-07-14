@@ -1,41 +1,90 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import Marquee from 'svelte-fast-marquee';
-  
-    export let text: string;
-    let isScrolling = false;
-    let h1Element: HTMLHeadingElement;
-    let parentDiv: HTMLDivElement;
+	export let pauseOnHover = false
+	export let pauseOnClick = false
+	export let direction = 'left'
+	export let speed = 100
+	let play = false
 
-    onMount(() => {
-        const resizeObserver = new ResizeObserver(entries => {
-            // We're only watching one element
-            const entry = entries.at(0);
+	let containerWidth;
+    let marqueeWidth;
 
-            const divWidth = entry.contentBoxSize[0].inlineSize;
-            const h1Width = h1Element ? h1Element.clientWidth : 0;
+    $: play = marqueeWidth > containerWidth;
 
-            console.log(`div: ${divWidth}`);
-            console.log(`h1: ${h1Width}`);
+	$: duration = containerWidth / speed;
 
-            isScrolling = h1Width > divWidth;
-        });
+	$: _style = `
+		--pause-on-hover: ${pauseOnHover ? 'paused' : 'running'};
+		--pause-on-click: ${pauseOnClick ? 'paused' : 'running'};
+	`
 
-        resizeObserver.observe(parentDiv);
-
-        // This callback cleans up the observer
-        return () => resizeObserver.unobserve(parentDiv);
-    });
+	$: _marqueeStyle = `
+		--play: ${play ? 'running' : 'paused'};
+		--direction: ${direction === 'left' ? 'normal' : 'reverse'};
+		--duration: ${duration}s;
+	`
 
 </script>
-  
-<div bind:this={parentDiv} style="width: 100%;">
-{#if isScrolling}
-    <Marquee direction='right' play={true}>
-        <!-- The extra space below keeps text from touching when wrapping -->
-        <h1 style="padding-left: 10px;" class="text" bind:this={h1Element}>{`${text} `}</h1>
-    </Marquee>
-{:else}
-    <h1 style="white-space: nowrap; width: fit-content;" class="text" bind:this={h1Element}>{text}</h1>
-{/if }
+
+<div class="marquee-container" style={_style}  bind:clientWidth={containerWidth}>
+	<div class={play ? 'marquee' : 'static'} style={_marqueeStyle}>
+        <div bind:clientWidth={marqueeWidth}>
+            <slot />
+        </div>
+	</div>
+    {#if play}
+        <div class="marquee" style={_marqueeStyle}>
+		    <slot />
+	    </div>
+    {/if}
 </div>
+
+<style>
+.marquee-container {
+	display: flex;
+	width: 100%;
+	overflow-x: hidden;
+	flex-direction: row;
+	position: relative;
+}
+
+.marquee-container:hover .marquee {
+	animation-play-state: var(--pause-on-hover);
+}
+
+.marquee-container:active .marquee {
+	animation-play-state: var(--pause-on-click);
+}
+
+.static {
+    flex: 0 0 auto;
+	min-width: 100%;
+	z-index: 1;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.marquee {
+	flex: 0 0 auto;
+	min-width: 100%;
+	z-index: 1;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+    padding-left: 10px;
+	animation: scroll var(--duration) linear 0s infinite;
+	animation-play-state: var(--play);
+	animation-direction: normal;
+	animation-direction: var(--direction);
+}
+
+@keyframes scroll {
+	0% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(-100%);
+	}
+}
+</style>
+  

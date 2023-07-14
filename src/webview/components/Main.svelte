@@ -45,7 +45,9 @@
 <p>TOKEN: {$accessToken}</p>
 {#if $currentTrack}
   <AlbumCover src={$currentTrack.album.images[0].url} />
-  <ScrollingText text={$currentTrack.name} />
+  <ScrollingText> 
+    <h1>{$currentTrack.name}</h1>
+  </ScrollingText>
   <p>{$currentTrack.artists[0].name}</p>
 {:else}
   <p>NO CURRENT TRACK</p>
