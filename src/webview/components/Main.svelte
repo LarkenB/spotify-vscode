@@ -7,6 +7,9 @@
   import PausePlayButton from './PausePlayButton.svelte';
   import AlbumCover from './AlbumCover.svelte';
   import ScrollingText from './ScrollingText.svelte';
+  import ShuffleButton from './ShuffleButton.svelte';
+  import RepeatButton from './RepeatButton.svelte';
+  import Scrubber from './Scrubber.svelte';
 
   let intervalId;
 
@@ -25,17 +28,20 @@
 {#if $currentTrack}
   <AlbumCover src={$currentTrack.album.images[0].url} />
   <ScrollingText> 
-    <h1>{$currentTrack.name}</h1>
+    <h1 style="margin: 0;">{$currentTrack.name}</h1>
   </ScrollingText>
-  <p>{$currentTrack.artists.map((artist) => artist.name).join(', ')}</p>
+  <p style="margin: 0;">{$currentTrack.artists.map((artist) => artist.name).join(', ')}</p>
 {:else}
   <p>NO CURRENT TRACK</p>
 {/if}
-<div>
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <ShuffleButton />
   <PreviousButton />
   <PausePlayButton />
   <NextButton />
+  <RepeatButton />
 </div>
+<Scrubber />
 
 <svelte:head>
   <!-- Fonts -->

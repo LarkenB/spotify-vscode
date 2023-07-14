@@ -39,6 +39,7 @@
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-typescript": "^11.1.2",
     "@smui/icon-button": "^7.0.0-beta.14",
+    "@smui/slider": "^7.0.0-beta.14",
     "@tsconfig/svelte": "^5.0.0",
     "@types/node": "^20.4.1",
     "@types/vscode": "^1.79.1",
@@ -57,7 +58,6 @@
   },
   "dependencies": {
     "node-fetch": "^3.3.1",
-    "svelte-fast-marquee": "^0.4.1",
     "svelte-material-icons": "^3.0.5"
   }
 }
