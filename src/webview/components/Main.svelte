@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { accessToken, currentTrack } from '../store';
+  import { accessToken, currentTrack, playbackState } from '../store';
   import { onMount, onDestroy } from 'svelte';
-  import { getCurrentTrack } from '../spotify/endpoints'
+  import { getCurrentTrack, updatePlaybackState } from '../spotify/endpoints'
   import PreviousButton from './PreviousButton.svelte';
   import NextButton from './NextButton.svelte';
   import PausePlayButton from './PausePlayButton.svelte';
@@ -11,16 +11,24 @@
   import RepeatButton from './RepeatButton.svelte';
   import Scrubber from './Scrubber.svelte';
 
-  let intervalId;
+  let playbackIntervalId;
+  let trackIntervalId;
 
   onMount(() => {
-    intervalId = setInterval(async () => {
-      currentTrack.set(await getCurrentTrack($accessToken))
+    // Poll for entire playback state every 5 seconds
+    playbackIntervalId = setInterval(async () => {
+      playbackState.set(await updatePlaybackState($accessToken));
     }, 5000);
+
+    // Poll for current track every second
+    trackIntervalId = setInterval(async () => {
+      currentTrack.set(await getCurrentTrack($accessToken));
+    }, 1000);
   });
 
   onDestroy(() => {
-    clearInterval(intervalId);
+    clearInterval(playbackIntervalId);
+    clearInterval(trackIntervalId);
   });
 </script>
 
